@@ -1,6 +1,10 @@
 from typing import Sequence
 import mysql.connector
 import requests
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 
 def get_member_activity(members: Sequence):
@@ -56,7 +60,7 @@ def reset_mysql(connection):
 
 def get_image(game_name):
     url = 'https://api.rawg.io/api/games'
-    API_KEY = '430bf52ec9884f888b04d66b0c446935'
+    API_KEY = os.getenv('RAWG_KEY')
 
     params = {
         'key': API_KEY,

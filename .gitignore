@@ -1,5 +1,5 @@
 .env
-rawg_test.py
 .venv/
 __pycache__/
 .idea/
+.DS_Store

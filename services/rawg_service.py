@@ -1,5 +1,6 @@
 import requests
 import os
+from utils.logger import logger
 
 def get_image(game_name):
     url = 'https://api.rawg.io/api/games'
@@ -12,10 +13,11 @@ def get_image(game_name):
     }
 
     try:
-        response = requests.get(url, params=params)
+        response = requests.get(url, params=params, timeout=10)
         data = response.json()
         game_image = data['results'][0]['background_image']
-    except IndexError:
-        print('No game image')
+    except Exception as error:
+        logger('rawg_service', str(error))
+        return None
     else:
         return game_image

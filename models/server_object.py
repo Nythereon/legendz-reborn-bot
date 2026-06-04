@@ -32,5 +32,5 @@ class ServerObject:
         self.map = None
         self.error = None
 
-    def to_dict(self):
-        return self.__dict__
+    # def to_dict(self):
+    #     return self.__dict__

@@ -6,60 +6,51 @@ from services.activity_service import get_member_info
 from services.pterodactyl import get_all_server_data
 import query_handlers.games_table_query as game_sql
 import query_handlers.servers_table_query as server_sql
-from services.mysql_login import login
-# from utils.logger import logger
+from query_handlers.mysql_login import login
 
 load_dotenv()
 
-URL = "https://panel.playerreborn.com/api/"
-PUBLIC_IP = "play.playerreborn.com"
+URL = os.getenv('URL')
+PUBLIC_IP = os.getenv('PUBLIC_IP')
 TOKEN = os.getenv("TOKEN")
-SERVER_ID = 1330977532824129616
+SERVER_ID = int(os.getenv('SERVER_ID'))
+GENERAL_CHAT_ID = int(os.getenv('GENERAL_CHAT_ID'))
 
 class PlayerRebornBot(discord.Client):
     def __init__(self, intents):
         super().__init__(intents=intents)
         self.guild = None
-        self.total_count = None
-        self.online_members = None
-        self.player_activity = {}
-        self.game_count = {}
-
-    async def on_connect(self):
-        print('Connecting...')
 
     async def on_ready(self):
-        print(f'{self.user} has connected to the server.')
         self.guild = self.get_guild(SERVER_ID)
-        print('')
-
 
         if not self.update_data.is_running():
             self.update_data.start()
 
-    # async def on_guild_channel_create(self, message):
-    #     pass
+    async def on_member_join(self, member):
+        channel = self.get_channel(GENERAL_CHAT_ID)
+        if channel:
+            await channel.send(f"🎉 Welcome {member.mention}! Glad to have you here.")
+
 
     # ********* LOOPS *************
 
     @tasks.loop(seconds=10.0)
     async def update_data(self):
 
+        if self.guild is None:
+            return
+
         player_manager = get_member_info(self.guild.members)
         server_manager = get_all_server_data(URL, PUBLIC_IP)
 
-        if not player_manager.online_members:
-            print("No Players are Online.")
-            print('')
-        else:
-
-            game_sql.insert_mysql(
-                connection=login(),
-                activity=player_manager.activity_count
-            )
+        game_sql.insert_mysql(
+            connection=login(),
+            activity=player_manager.activity_count
+        )
 
         if not server_manager.servers:
-            print("No Servers Are Playable")
+            print("No server data received.")
             print('')
         else:
             server_sql.insert_mysql(

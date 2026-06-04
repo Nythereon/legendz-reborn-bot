@@ -1,13 +1,13 @@
-import logging
+import os
+from datetime import datetime
 
-logger = logging.getLogger("player_reborn")
-logger.setLevel(logging.INFO)
-file_handler = logging.FileHandler("player_reborn.log")
 
-formatter = logging.Formatter(
-    "%(asctime)s | %(levelname)s | %(message)s"
-)
+def logger(error_location: str, error_message: str):
+    os.makedirs('logs', exist_ok=True)
 
-file_handler.setFormatter(formatter)
-logger.addHandler(file_handler)
+    dt_obj = datetime.now()
+    date = dt_obj.date()
+    date_time = dt_obj.strftime('%Y-%m-%d %H:%M:%S')
 
+    with open(f'logs/{date}.log', 'a') as file:
+        file.write(f'{date_time} | {error_location} | {error_message}\n')

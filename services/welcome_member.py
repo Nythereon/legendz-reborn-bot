@@ -1,1 +1,0 @@
-#TODO: Create a script that allows the bot to notify all members to welcome a new member that just joined the discord

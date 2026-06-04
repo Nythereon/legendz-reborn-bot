@@ -1,19 +1,32 @@
 import requests
-import time
 import os
-
 from dotenv import load_dotenv
-
 from game_handler import GAME_HANDLERS
 from models.server_manager import ServerManager
 from models.server_object import ServerObject
+from utils.logger import logger
 
 load_dotenv()
 
-start = time.time()
 
 APP_KEY = os.getenv("APP_KEY")
 CLIENT_KEY = os.getenv("CLIENT_KEY")
+
+
+def make_request(url, header):
+
+    for _ in range(3):
+        try:
+            response = requests.get(url=url, headers=header, timeout=10)
+            data = response.json()
+        except Exception as error:
+            logger('pterodactyl_request', str(error))
+            continue
+
+        else:
+            return data
+
+    return None
 
 def get_all_server_data(url, public_ip):
 
@@ -32,6 +45,9 @@ def get_all_server_data(url, public_ip):
     client_info = get_client_data(url, client_headers, public_ip)
     application_info = get_application_data(url, app_headers)
 
+    if not application_info:
+        return manager
+
     for identifier, server_data in application_info.items():
         if "Eric's Palworld Server" in application_info[identifier]['server_name']:
             pass
@@ -42,6 +58,9 @@ def get_all_server_data(url, public_ip):
                 'egg': server_data['egg'],
                 'nest': server_data['nest']
             }
+
+    if not client_info:
+        return manager
 
     for identifier, server_data in client_info.items():
         manager.servers[identifier].update({
@@ -55,6 +74,7 @@ def get_all_server_data(url, public_ip):
 
         if 'query_port' in server_data:
             manager.servers[identifier]['query_port'] = server_data['query_port']
+
 
     for identifier, server_data in manager.servers.items():
         server_identity = manager.servers[identifier]
@@ -96,10 +116,11 @@ def get_client_data(url, header, public_ip):
     client_info = {}
 
     client_url = url + 'client/'
-    response = requests.get(client_url, headers=header, timeout=10)
-    print(f'Request took {time.time() - start:2f} seconds')
-    print('')
-    data = response.json()
+    data = make_request(client_url, header)
+
+    if data is None:
+        return {}
+
 
     for server in data['data']:
 
@@ -115,11 +136,11 @@ def get_client_data(url, header, public_ip):
         client_identity = client_info[identifier]
 
         resource_url = url + f'client/servers/{identifier}/resources'
-        resource_response = requests.get(resource_url, headers=header, timeout=10)
-        print(f'Request took {time.time() - start:2f} seconds')
-        print('')
-        resource_data = resource_response.json()
 
+        resource_data = make_request(resource_url, header)
+
+        if resource_data is None:
+            return {}
 
         if 'attributes' in resource_data:
             current_state = resource_data['attributes']['current_state']
@@ -149,8 +170,10 @@ def get_application_data(url, header):
     application_info = {}
     app_url = url + 'application/servers?include=egg'
 
-    response = requests.get(app_url, headers=header)
-    server_data = response.json()
+    server_data = make_request(app_url, header)
+
+    if server_data is None:
+        return {}
 
     for server in server_data['data']:
         attributes = server['attributes']

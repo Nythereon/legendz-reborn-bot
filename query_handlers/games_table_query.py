@@ -1,4 +1,6 @@
 from services.rawg_service import get_image
+from utils.logger import logger
+
 
 def reset_mysql(connection):
     cursor = connection.cursor()  # Create cursor object
@@ -14,12 +16,19 @@ def reset_mysql(connection):
     cursor.close()  # Cleanup
 
 def insert_mysql(activity: dict, connection):
+
+    if connection is None:
+        return
+
     reset_mysql(connection)
 
     cursor = connection.cursor()  # Create cursor object
 
     for activity_code, count in activity.items():  # Loop through dictionary
+
+        game_image = None
         player_count = count
+
         # Check if game exists
         check_query = """
             SELECT activity_code
@@ -30,13 +39,8 @@ def insert_mysql(activity: dict, connection):
         cursor.execute(check_query, (activity_code,))
         result = cursor.fetchone()
 
-        if result:
-            game_image = None
-            print(f'Game image already exists for {activity_code}.')
-
-        else:
+        if not result:
             game_image = get_image(activity_code)
-            print(f'Grabbing image for {activity_code}.')
 
         # SQL Query
         query = """
@@ -55,6 +59,3 @@ def insert_mysql(activity: dict, connection):
     # Cleanup
     cursor.close()
     connection.close()
-    print('Updated Games Table')
-
-    return None

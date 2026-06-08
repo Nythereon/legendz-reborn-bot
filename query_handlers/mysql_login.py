@@ -17,5 +17,5 @@ def login():
     except Exception as error:
         logger('sql_login', str(error))
         return None
-    
+
     return connection

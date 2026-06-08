@@ -42,8 +42,17 @@ def get_all_server_data(url, public_ip):
 
     manager = ServerManager()
 
-    client_info = get_client_data(url, client_headers, public_ip)
-    application_info = get_application_data(url, app_headers)
+    try:
+        client_info = get_client_data(url, client_headers, public_ip)
+    except Exception as e:
+        logger('get_client_data', str(e))
+        return manager
+
+    try:
+        application_info = get_application_data(url, app_headers)
+    except Exception as e:
+        logger('get_application_data', str(e))
+        return manager
 
     if not application_info:
         return manager
@@ -62,7 +71,20 @@ def get_all_server_data(url, public_ip):
     if not client_info:
         return manager
 
+    required = [
+        'ip',
+        'port',
+        'current_state',
+        'uptime',
+        'public_ip'
+    ]
+
     for identifier, server_data in client_info.items():
+
+        if not all(key in server_data for key in required):
+            logger('get_all_server_data', f'Missing data for {identifier}: {server_data}')
+            continue
+
         manager.servers[identifier].update({
             'ip': server_data['ip'],
             'port': server_data['port'],
@@ -74,6 +96,8 @@ def get_all_server_data(url, public_ip):
 
         if 'query_port' in server_data:
             manager.servers[identifier]['query_port'] = server_data['query_port']
+
+
 
 
     for identifier, server_data in manager.servers.items():
@@ -121,6 +145,10 @@ def get_client_data(url, header, public_ip):
     if data is None:
         return {}
 
+    if 'data' not in data:
+        logger('get_client_data', f'Unexpected response: {data}')
+        return {}
+
 
     for server in data['data']:
 
@@ -140,7 +168,7 @@ def get_client_data(url, header, public_ip):
         resource_data = make_request(resource_url, header)
 
         if resource_data is None:
-            return {}
+            continue
 
         if 'attributes' in resource_data:
             current_state = resource_data['attributes']['current_state']
@@ -173,6 +201,10 @@ def get_application_data(url, header):
     server_data = make_request(app_url, header)
 
     if server_data is None:
+        return {}
+
+    if 'data' not in server_data:
+        logger('get_application_data', f'Unexpected Response {server_data}')
         return {}
 
     for server in server_data['data']:

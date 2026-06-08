@@ -1,5 +1,4 @@
 from services.rawg_service import get_image
-from utils.logger import logger
 
 
 def reset_mysql(connection):

@@ -1,8 +1,9 @@
-import os
 import mysql.connector
-
+import os
+from dotenv import load_dotenv
 from utils.logger import logger
 
+load_dotenv()
 
 def login():
     # Connect to MySQL Server

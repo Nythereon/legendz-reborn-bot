@@ -1,5 +1,4 @@
 from steam import SteamQuery
-
 from utils.logger import logger
 
 

@@ -1,6 +1,3 @@
-from utils.logger import logger
-
-
 def reset_mysql(connection):
 
     cursor = connection.cursor()  # Create cursor object

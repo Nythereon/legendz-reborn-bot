@@ -35,7 +35,7 @@ class PlayerRebornBot(discord.Client):
 
     # ********* LOOPS *************
 
-    @tasks.loop(seconds=10.0)
+    @tasks.loop(seconds=5.0)
     async def update_data(self):
 
         if self.guild is None:

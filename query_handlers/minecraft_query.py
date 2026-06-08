@@ -1,5 +1,4 @@
 from mcstatus import JavaServer
-
 from utils.logger import logger
 
 

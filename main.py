@@ -2,11 +2,15 @@ import discord
 from discord.ext import tasks
 from dotenv import load_dotenv
 import os
+
+from models.player_manager import PlayerManager
+from models.server_manager import ServerManager
 from services.activity_service import get_member_info
 from services.pterodactyl import get_all_server_data
 import query_handlers.games_table_query as game_sql
 import query_handlers.servers_table_query as server_sql
 from query_handlers.mysql_login import login
+from utils.logger import logger
 
 load_dotenv()
 
@@ -41,8 +45,17 @@ class PlayerRebornBot(discord.Client):
         if self.guild is None:
             return
 
-        player_manager = get_member_info(self.guild.members)
-        server_manager = get_all_server_data(URL, PUBLIC_IP)
+        try:
+            player_manager = get_member_info(self.guild.members)
+        except Exception as e:
+            logger('update_data/player_manager', str(e))
+            player_manager = PlayerManager()
+
+        try:
+            server_manager = get_all_server_data(URL, PUBLIC_IP)
+        except Exception as e:
+            logger('update_data/server_manager', str(e))
+            server_manager = ServerManager()
 
         game_sql.insert_mysql(
             connection=login(),

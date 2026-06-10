@@ -89,7 +89,9 @@ def get_all_server_data(url, public_ip):
                 'current_state': server_data['current_state'],
             })
         else:
-            logger('get_all_server_data', f'Current State not grabbed for {manager.servers[identifier]['server_name']}')
+            manager.servers[identifier].update({
+                'current_state': 'unknown'
+            })
 
     for identifier, server_data in manager.servers.items():
         server_identity = manager.servers[identifier]

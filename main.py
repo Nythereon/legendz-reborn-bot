@@ -45,17 +45,9 @@ class PlayerRebornBot(discord.Client):
         if self.guild is None:
             return
 
-        try:
-            player_manager = get_member_info(self.guild.members)
-        except Exception as e:
-            logger('update_data/player_manager', str(e))
-            player_manager = PlayerManager()
+        player_manager = get_member_info(self.guild.members)
+        server_manager = get_all_server_data(URL, PUBLIC_IP)
 
-        try:
-            server_manager = get_all_server_data(URL, PUBLIC_IP)
-        except Exception as e:
-            logger('update_data/server_manager', str(e))
-            server_manager = ServerManager()
 
         game_sql.insert_mysql(
             connection=login(),

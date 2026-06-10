@@ -71,24 +71,11 @@ def get_all_server_data(url, public_ip):
     if not client_info:
         return manager
 
-    required = [
-        'ip',
-        'port',
-        'current_state',
-        'uptime',
-        'public_ip'
-    ]
-
     for identifier, server_data in client_info.items():
-
-        if not all(key in server_data for key in required):
-            logger('get_all_server_data', f'Missing data for {identifier}: {server_data}')
-            continue
 
         manager.servers[identifier].update({
             'ip': server_data['ip'],
             'port': server_data['port'],
-            'current_state': server_data['current_state'],
             'uptime': server_data['uptime'],
             'public_ip': server_data['public_ip'],
 
@@ -97,8 +84,12 @@ def get_all_server_data(url, public_ip):
         if 'query_port' in server_data:
             manager.servers[identifier]['query_port'] = server_data['query_port']
 
-
-
+        if 'current_state' in server_data:
+            manager.servers[identifier].update({
+                'current_state': server_data['current_state'],
+            })
+        else:
+            logger('get_all_server_data', f'Current State not grabbed for {manager.servers[identifier]['server_name']}')
 
     for identifier, server_data in manager.servers.items():
         server_identity = manager.servers[identifier]

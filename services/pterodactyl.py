@@ -109,10 +109,29 @@ def get_all_server_data(url, public_ip):
         if 'rcon' in server_data:
             manager.servers[identifier]['rcon'] = server_data['rcon']
 
+
+    required_server = [
+        'ip',
+        'server_name',
+        'game_type',
+        'egg',
+        'nest',
+        'current_state',
+        'uptime',
+        'public_ip',
+        'port'
+    ]
+
+
     for identifier, server_data in manager.servers.items():
         server_identity = manager.servers[identifier]
-        ip = server_identity['ip']
 
+        if not all(key in server_identity for key in required_server):
+            logger('get_all_server_data',
+                   f'Incomplete data for {identifier}: {server_identity}.')
+            continue
+
+        ip = server_identity['ip']
         server_name = server_identity['server_name']
         game_type = server_identity['game_type']
         egg = server_identity['egg']
@@ -129,6 +148,7 @@ def get_all_server_data(url, public_ip):
         server.public_ip = public_ip
         server.uptime = uptime
         server.current_state = current_state
+
 
         if 'query_port' in server_identity:
             server.query_port = server_identity['query_port']

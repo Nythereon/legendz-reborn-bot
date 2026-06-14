@@ -1,3 +1,5 @@
+from utils.logger import logger
+
 def reset_mysql(connection):
 
     cursor = connection.cursor()  # Create cursor object
@@ -37,12 +39,15 @@ def insert_mysql(server_information: dict, connection):
         error = %s
         """
 
+        try:
+            values = (server.identifier, server.server_name, server.player_count, server.max_players, server.current_state,
+                      server.uptime, server.ip, server.port, server.game_type, server.version, server.map,
+                      server.query_port, server.rcon, server.error, server.player_count, server.max_players, server.current_state,
+                      server.uptime, server.version, server.error)
+        except AttributeError as e:
+            logger('insert_mysql', f'Expected ServerType, got {type(server)}')
+            continue
 
-
-        values = (server.identifier, server.server_name, server.player_count, server.max_players, server.current_state,
-                  server.uptime, server.ip, server.port, server.game_type, server.version, server.map,
-                  server.query_port, server.rcon, server.error, server.player_count, server.max_players, server.current_state,
-                  server.uptime, server.version, server.error)
         cursor.execute(query, values)
 
     connection.commit()

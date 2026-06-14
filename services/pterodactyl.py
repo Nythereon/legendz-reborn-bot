@@ -8,13 +8,11 @@ from utils.logger import logger
 
 load_dotenv()
 
-
 APP_KEY = os.getenv("APP_KEY")
 CLIENT_KEY = os.getenv("CLIENT_KEY")
 
 
 def make_request(url, header):
-
     for _ in range(3):
         try:
             response = requests.get(url=url, headers=header, timeout=10)
@@ -28,8 +26,8 @@ def make_request(url, header):
 
     return None
 
-def get_all_server_data(url, public_ip):
 
+def get_all_server_data(url, public_ip):
     client_headers = {
         "Authorization": f"Bearer {CLIENT_KEY}",
         "Accept": "Application/vnd.pterodactyl.v1+json"
@@ -109,7 +107,6 @@ def get_all_server_data(url, public_ip):
         if 'rcon' in server_data:
             manager.servers[identifier]['rcon'] = server_data['rcon']
 
-
     required_server = [
         'ip',
         'server_name',
@@ -122,48 +119,48 @@ def get_all_server_data(url, public_ip):
         'port'
     ]
 
+    finished_servers = {}
 
     for identifier, server_data in manager.servers.items():
-        server_identity = manager.servers[identifier]
 
-        if not all(key in server_identity for key in required_server):
+        if not all(key in server_data for key in required_server):
             logger('get_all_server_data',
-                   f'Incomplete data for {identifier}: {server_identity}.')
+                   f'Incomplete data for {identifier}: {server_data}.')
             continue
 
-        ip = server_identity['ip']
-        server_name = server_identity['server_name']
-        game_type = server_identity['game_type']
-        egg = server_identity['egg']
-        nest = server_identity['nest']
-        current_state = server_identity['current_state']
-        uptime = server_identity['uptime']
-        public_ip = server_identity['public_ip']
-        port = server_identity['port']
+        server = ServerObject(
 
+            identifier=identifier,
+            server_name=server_data['server_name'],
+            game_type=server_data['game_type'],
+            ip=server_data['ip'],
+            port=server_data['port']
 
-        server = ServerObject(ip=ip, port=port, identifier=identifier, server_name=server_name, game_type=game_type)
-        server.egg = egg
-        server.nest = nest
-        server.public_ip = public_ip
-        server.uptime = uptime
-        server.current_state = current_state
+        )
 
+        server.egg = server_data['egg']
+        server.nest = server_data['nest']
+        server.public_ip = server_data['public_ip']
+        server.uptime = server_data['uptime']
+        server.current_state = server_data['current_state']
 
-        if 'query_port' in server_identity:
-            server.query_port = server_identity['query_port']
+        if 'query_port' in server_data:
+            server.query_port = server_data['query_port']
 
-        if 'rcon' in server_identity:
-            server.rcon = server_identity['rcon']
-
-        manager.servers[identifier] = server
+        if 'rcon' in server_data:
+            server.rcon = server_data['rcon']
 
         handler = GAME_HANDLERS.get(server.game_type)
 
         if handler:
             handler(server)
 
+        finished_servers[identifier] = server
+
+    manager.servers = finished_servers
+
     return manager
+
 
 def get_client_data(url, header, public_ip):
     client_info = {}
@@ -177,7 +174,6 @@ def get_client_data(url, header, public_ip):
     if 'data' not in data:
         logger('get_client_data', f'Unexpected response: {data}')
         return {}
-
 
     for server in data['data']:
 
@@ -222,6 +218,7 @@ def get_client_data(url, header, public_ip):
                 client_identity['rcon'] = attributes['port']
 
     return client_info
+
 
 def get_application_data(url, header):
     application_info = {}
